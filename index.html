@@ -1,13 +1,37 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>beat-bound-aura</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beat Bound Aura (BBA)</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>🎮 Beat Bound Aura</h1>
+      <p class="subtitle">Detecte sua aura de movimento em tempo real</p>
+    </header>
+    
+    <div class="canvas-container">
+      <video id="webcam" autoplay playsinline></video>
+      <canvas id="output_canvas"></canvas>
+      <div id="fps" class="fps-counter">FPS: 0</div>
+    </div>
+
+    <div id="ui-layer">
+      <p id="status">Aguardando permissão da câmera...</p>
+      <div class="button-group">
+        <button id="start_btn" class="btn btn-primary">🎯 GERAR MINHA AURA</button>
+        <button id="stop_btn" class="btn btn-danger" style="display: none;">⏹️ PARAR CÂMERA</button>
+      </div>
+    </div>
+
+    <footer>
+      <p>💡 Dica: Permaneça no centro da tela e faça movimentos amplos!</p>
+    </footer>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
 </html>
