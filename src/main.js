@@ -1,5 +1,4 @@
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
-
 // ========== REFERÊNCIAS DOS ELEMENTOS HTML ==========
 const videoElement = document.getElementById('webcam');
 const canvasElement = document.getElementById('output_canvas');
@@ -21,6 +20,12 @@ let poseLandmarker = undefined;
 let webcamStream = null;
 let isRunning = false;
 let animationId = null;
+
+// Variáveis de Áudio
+let audioCtx = null;
+let audioSource = null;
+let lowPassFilter = null;
+let gainNode = null;
 
 // Variáveis para calcular FPS
 let lastFrameTime = performance.now();
@@ -61,6 +66,47 @@ async function createPoseLandmarker() {
 
 createPoseLandmarker();
 
+
+// ========== MOTOR DE ÁUDIO ==========
+async function setupAudio() {
+  try {
+    // 1. Cria o contexto de áudio do navegador
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    
+    // 2. Cria o nosso "pedal" de erro (Filtro Low Pass)
+    lowPassFilter = audioCtx.createBiquadFilter();
+    lowPassFilter.type = "lowpass";
+    lowPassFilter.frequency.value = 20000; // 20000Hz = Som 100% limpo
+
+    // 2.5 Cria o "pedal" de Volume (Gain) <-- NOVO
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 1; // Começa no volume máximo (1 = 100%)  
+
+    // 3. Busca a música na pasta public
+    const response = await fetch('/NO-BATIDAO.mp3');
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+    // 4. Cria o tocador
+    audioSource = audioCtx.createBufferSource();
+    audioSource.buffer = audioBuffer;
+    audioSource.loop = true; // Deixa a música em loop
+
+    // 5. Conecta os cabos: Tocador -> Filtro -> Caixa de Som
+    audioSource.connect(lowPassFilter);
+    lowPassFilter.connect(gainNode);
+    lowPassFilter.connect(audioCtx.destination);
+
+    // 6. Dá o play!
+    audioSource.start(0);
+    console.log("✅ Áudio carregado e tocando!");
+  } catch (error) {
+    console.error("❌ Erro ao carregar o áudio:", error);
+    alert("Não foi possível carregar a musica.mp3. Verifique se o nome está correto na pasta public.");
+  }
+}
+
 // ========== LOOP DE DETECÇÃO ==========
 /**
  * Esta função roda em loop infinito (enquanto o jogo estiver ativo)
@@ -93,6 +139,38 @@ async function predictWebcam() {
           lineWidth: 2
         });
       }
+
+      // Pegamos a primeira pessoa detectada
+const landmarks = results.landmarks[0]; 
+
+// Referências (Y diminui conforme sobe na tela)
+const noseY = landmarks[0].y;
+const leftWristY = landmarks[15].y;
+const rightWristY = landmarks[16].y;
+
+// Lógica do Movimento: "Mãos ao alto!"
+const isHandsUp = leftWristY < noseY && rightWristY < noseY;
+
+if (isHandsUp) {
+    statusElement.innerText = "✨ AURA MAXIMA! Mãos ao alto!";
+    statusElement.style.color = "#00FFCC";
+    
+    // Som Limpo: Volta o filtro para 20.000Hz suavemente em 0.1s
+    if (audioCtx && lowPassFilter && gainNode) {
+        lowPassFilter.frequency.setTargetAtTime(20000, audioCtx.currentTime, 0.1);
+        gainNode.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.1);
+    }
+} else {
+    statusElement.innerText = "⚠️ Mãos para baixo! Aura enfraquecendo...";
+    statusElement.style.color = "#FF00BB";
+    
+    // Som Abafado: Derruba o filtro para 400Hz suavemente em 0.1s
+    if (audioCtx && lowPassFilter && gainNode) {
+        lowPassFilter.frequency.setTargetAtTime(400, audioCtx.currentTime, 0.1);
+        gainNode.gain.setTargetAtTime(0.01, audioCtx.currentTime, 0.1);
+    }
+}
+
     }
 
     // Calcular FPS
@@ -149,6 +227,13 @@ async function initWebcam() {
       fpsElement.style.display = "block";
     }
 
+    // Iniciar o áudio junto com a câmera
+if (!audioCtx) {
+  await setupAudio();
+} else if (audioCtx.state === 'suspended') {
+  audioCtx.resume();
+}
+
     console.log("Stream da webcam iniciado com sucesso.");
   } catch (error) {
     // 4. Tratamento de erros (Ex: Usuário negou a permissão)
@@ -191,6 +276,17 @@ function stopWebcam() {
   fps = 0;
   frameCount = 0;
   lastFrameTime = performance.now();
+
+  // Parar o áudio
+if (audioSource) {
+  audioSource.stop();
+  audioSource.disconnect();
+  audioSource = null;
+}
+if (audioCtx) {
+  audioCtx.close();
+  audioCtx = null;
+}
 }
 
 // ========== EVENT LISTENERS ==========
