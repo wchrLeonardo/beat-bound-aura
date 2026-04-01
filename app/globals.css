@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-950 text-slate-100 overflow-x-hidden;
+  /* Isso deixa o fundo quase preto e o texto claro por padrão em todas as telas */
+}
