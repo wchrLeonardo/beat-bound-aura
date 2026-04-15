@@ -25,16 +25,10 @@ export default function LoginPage() {
       <div className="absolute bottom-4 right-4 w-8 h-8 border-b border-r border-cyan-500/40" />
 
       {/* Logo + Title */}
-      <div className="relative z-10 flex flex-col items-center mb-8">
+      <div className="relative z-10 flex flex-col items-center mt-3 mb-3">
         {/* Logo icon */}
-        <div className="w-12 h-12 rounded-xl bg-[#0d1f35] border border-cyan-400/30 flex items-center justify-center mb-5 shadow-[0_0_20px_rgba(0,255,255,0.15)]">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="10" width="2" height="4" rx="1" fill="#00e5ff" />
-            <rect x="7" y="7" width="2" height="10" rx="1" fill="#00e5ff" />
-            <rect x="11" y="5" width="2" height="14" rx="1" fill="#00e5ff" />
-            <rect x="15" y="8" width="2" height="8" rx="1" fill="#00e5ff" />
-            <rect x="19" y="11" width="2" height="3" rx="1" fill="#00e5ff" />
-          </svg>
+        <div className="w-18 h-18 rounded-xl bg-[#0d1f35] border border-cyan-400/30 flex items-center justify-center mb-5 shadow-[0_0_20px_rgba(0,255,255,0.15)]">
+          <img src="/LOGO.png" alt="Beat Bound Aura Logo" className="w-16 h-16 object-contain" />
         </div>
 
         {/* App name */}
