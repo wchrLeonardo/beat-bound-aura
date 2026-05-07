@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   {
@@ -15,7 +16,6 @@ const navItems = [
         <rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
     ),
-    active: true,
   },
   {
     label: "Jogar",
@@ -64,6 +64,7 @@ const navItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
 
   return (
     <aside
@@ -98,33 +99,42 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-2 flex flex-col gap-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-              item.active
-                ? "bg-cyan-400/10 text-cyan-300 border border-cyan-400/20"
-                : "text-white/40 hover:text-white/70 hover:bg-white/[0.04] border border-transparent"
-            }`}
-          >
-            <span
-              className={`min-w-[18px] transition-colors ${
-                item.active ? "text-cyan-400" : "text-white/30 group-hover:text-white/60"
+        {navItems.map((item) => {
+          // Lógica para definir se o item atual está ativo.
+          // Se for /dashboard, só fica ativo se a rota for exatamente /dashboard
+          // Para outras rotas, fica ativo se a rota começar com o href (ex: /dashboard/play/nightmare acende o 'Jogar')
+          const isActive = item.href === '/dashboard' 
+            ? pathname === item.href 
+            : pathname.startsWith(item.href);
+
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                isActive
+                  ? "bg-cyan-400/10 text-cyan-300 border border-cyan-400/20"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/[0.04] border border-transparent"
               }`}
             >
-              {item.icon}
-            </span>
-            {!collapsed && (
-              <span className="text-[11px] tracking-[0.12em] uppercase font-medium whitespace-nowrap">
-                {item.label}
+              <span
+                className={`min-w-[18px] transition-colors ${
+                  isActive ? "text-cyan-400" : "text-white/30 group-hover:text-white/60"
+                }`}
+              >
+                {item.icon}
               </span>
-            )}
-            {item.active && !collapsed && (
-              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,229,255,0.6)]" />
-            )}
-          </Link>
-        ))}
+              {!collapsed && (
+                <span className="text-[11px] tracking-[0.12em] uppercase font-medium whitespace-nowrap">
+                  {item.label}
+                </span>
+              )}
+              {isActive && !collapsed && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,229,255,0.6)]" />
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Collapse toggle */}
